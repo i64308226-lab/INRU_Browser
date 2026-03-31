@@ -1,0 +1,48 @@
+{
+  "name": "inru-browser",
+  "version": "1.0.0",
+  "description": "INRU Browser - Быстрый и безопасный браузер для ПК и мобильных устройств",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "sync:mobile": "npx cap sync",
+    "run:android": "npx cap run android",
+    "run:ios": "npx cap run ios"
+  },
+  "author": "INRU Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "@capacitor/core": "^5.6.0",
+    "@capacitor/cli": "^5.6.0",
+    "@capacitor/android": "^5.6.0",
+    "@capacitor/ios": "^5.6.0"
+  },
+  "build": {
+    "appId": "com.inru.browser",
+    "productName": "INRU Browser",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "src/assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "src/assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "src/assets/icon.png"
+    }
+  }
+}
