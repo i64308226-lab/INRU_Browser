@@ -1,0 +1,98 @@
+name: Build App (Android & Windows)
+
+on:
+  push:
+    branches: [ "main", "master" ] # Срабатывает при обновлении этих веток
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Если у тебя Flutter: раскомментируй блок ниже
+      # - name: Setup Flutter
+      #   uses: subosito/flutter-action@v2
+      #   with:
+      #     flutter-version: '3.x.x' # Укажи свою версию Flutter
+      
+      # Если у тебя просто Java/Kotlin (Gradle):
+      - name: Setup Java JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build APK
+        run: ./gradlew assembleRelease 
+        # Примечание: Для Flutter команда будет: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-release
+          path: app/build/outputs/apk/release/app-release.apk
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Если у тебя Python (PyInstaller):
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build EXE
+        run: pyinstaller --onefile main.py
+        # Примечание: Замените 'main.py' на имя твоего главного файла
+
+      - name: Upload EXE Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-exe
+          path: dist/main.exe
+          # Или путь к твоему файлу после сборки
+
+  release:
+    needs: [build-android, build-windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: android-release
+          path: artifacts/android
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-exe
+          path: artifacts/windows
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/android/*.apk
+            artifacts/windows/*.exe
+          tag_name: v${{ github.run_number }}
+          name: Release ${{ github.run_number }}
+          body: |
+            Автоматическая сборка приложения.
+            📱 Android: Файл .apk
+            💻 Windows: Файл .exe
